@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+    <meta charset="UTF-8" />
+    <title>מחשבון עם תפריט צד</title>
+    <style>
+        body {
+            font-family: "Segoe UI", Arial, sans-serif;
+            background: linear-gradient(145deg, #f0f4f8 0%, #d9e2ec 100%);
+            direction: rtl;
+            margin: 0;
+            min-height: 100vh;
+            box-sizing: border-box;
+            display: flex;
+        }
+        .sidebar {
+            width: 200px;
+            background: #4a90e2;
+            color: #fff;
+            min-height: 100vh;
+            padding-top: 40px;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.07);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .sidebar button {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 1.2em;
+            margin: 15px 0;
+            cursor: pointer;
+            padding: 10px 0;
+            width: 100%;
+            transition: background 0.2s;
+        }
+        .sidebar button.active,
+        .sidebar button:hover {
+            background: #357ab8;
+        }
+        .main-content {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 40px 0;
+        }
+        .calculator {
+            background: #fff;
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 32px;
+            border-radius: 15px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+        .display {
+            width: 100%;
+            height: 60px;
+            font-size: 2em;
+            text-align: left;
+            margin-bottom: 20px;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #cfd8dc;
+            background: #e6ecf0;
+            box-sizing: border-box;
+            direction: ltr;
+        }
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+        }
+        button.calc-btn {
+            padding: 18px;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 50px;
+            background: #4a90e2;
+            color: white;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.2s;
+            box-shadow: 0 1px 3px #b0bec5;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        button.calc-btn:hover {
+            background: #357ab8;
+            transform: scale(1.05);
+        }
+        .span-2 { grid-column: span 2; }
+        @media (max-width: 700px) {
+            .sidebar {
+                width: 60px;
+                padding-top: 10px;
+            }
+            .sidebar button {
+                font-size: 0.9em;
+                padding: 8px 0;
+            }
+            .main-content {
+                padding: 10px 0;
+            }
+            .calculator {
+                max-width: 98vw;
+                padding: 10px;
+            }
+            .display {
+                height: 40px;
+                font-size: 1.1em;
+                padding: 6px;
+            }
+            button.calc-btn {
+                padding: 10px;
+                font-size: 1em;
+            }
+            .buttons {
+                gap: 6px;
+            }
+        }
+        /* טקסט בכפתורי בחירה במחשבון משקל ואורך */
+        select, input {
+            font-size: 1em;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <button id="simpleBtn" class="active" onclick="showCalculator('simple')">מחשבון פשוט</button>
+        <button id="scientificBtn" onclick="showCalculator('scientific')">מחשבון מדעי</button>
+        <button id="currencyBtn" onclick="showCalculator('currency')">מחשבון מטבעות</button>
+        <button id="weightBtn" onclick="showCalculator('weight')">מחשבון משקל</button>
+        <button id="lengthBtn" onclick="showCalculator('length')">מחשבון אורך</button>
+    </div>
+    <div class="main-content">
+        <!-- מחשבון פשוט -->
+        <div class="calculator" id="simpleCalc">
+            <input type="text" class="display" id="simpleDisplay" readonly />
+            <div class="buttons">
+            <button class="calc-btn" onclick="simpleAppend('7')">7</button>
+            <button class="calc-btn" onclick="simpleAppend('8')">8</button>
+            <button class="calc-btn" onclick="simpleAppend('9')">9</button>
+            <button class="calc-btn" onclick="simpleAppend('/')">÷</button>
+
+            <button class="calc-btn" onclick="simpleAppend('4')">4</button>
+            <button class="calc-btn" onclick="simpleAppend('5')">5</button>
+            <button class="calc-btn" onclick="simpleAppend('6')">6</button>
+            <button class="calc-btn" onclick="simpleAppend('*')">×</button>
+
+            <button class="calc-btn" onclick="simpleAppend('1')">1</button>
+            <button class="calc-btn" onclick="simpleAppend('2')">2</button>
+            <button class="calc-btn" onclick="simpleAppend('3')">3</button>
+            <button class="calc-btn" onclick="simpleAppend('-')">-</button>
+
+            <button class="calc-btn" onclick="simpleAppend('0')">0</button>
+            <button class="calc-btn" onclick="simpleAppend('.')">.</button>
+            <button class="calc-btn" onclick="simpleCalculate()">=</button>
+            <button class="calc-btn" onclick="simpleAppend('+')">+</button>
+
+            <button class="calc-btn span-2" onclick="simpleClear()">AC</button>
+            <button class="calc-btn span-2" onclick="simpleBackspace()">C</button>
+            </div>
+        </div>
+
+        <!-- מחשבון מדעי -->
+        <div class="calculator" id="scientificCalc" style="display:none;">
+            <input type="text" class="display" id="scientificDisplay" readonly />
+            <div class="buttons">
+            <button class="calc-btn" onclick="scientificAppend('7')">7</button>
+            <button class="calc-btn" onclick="scientificAppend('8')">8</button>
+            <button class="calc-btn" onclick="scientificAppend('9')">9</button>
+            <button class="calc-btn" onclick="scientificAppend('/')">÷</button>
+
+            <button class="calc-btn" onclick="scientificAppend('4')">4</button>
+            <button class="calc-btn" onclick="scientificAppend('5')">5</button>
+            <button class="calc-btn" onclick="scientificAppend('6')">6</button>
+            <button class="calc-btn" onclick="scientificAppend('*')">×</button>
+
+            <button class="calc-btn" onclick="scientificAppend('1')">1</button>
+            <button class="calc-btn" onclick="scientificAppend('2')">2</button>
+            <button class="calc-btn" onclick="scientificAppend('3')">3</button>
+            <button class="calc-btn" onclick="scientificAppend('-')">-</button>
+
+            <button class="calc-btn" onclick="scientificAppend('0')">0</button>
+            <button class="calc-btn" onclick="scientificAppend('.')">.</button>
+            <button class="calc-btn" onclick="scientificCalculate()">=</button>
+            <button class="calc-btn" onclick="scientificAppend('+')">+</button>
+
+            <button class="calc-btn span-2" onclick="scientificClear()">AC</button>
+            <button class="calc-btn span-2" onclick="scientificBackspace()">C</button>
+
+            <!-- פונקציות מדעיות -->
+            <button class="calc-btn" onclick="scientificAppend('Math.sin(')">sin</button>
+            <button class="calc-btn" onclick="scientificAppend('Math.cos(')">cos</button>
+            <button class="calc-btn" onclick="scientificAppend('Math.tan(')">tan</button>
+            <button class="calc-btn" onclick="scientificAppend('Math.log10(')">log</button>
+
+            <button class="calc-btn" onclick="scientificAppend('Math.log(')">ln</button>
+            <button class="calc-btn" onclick="scientificAppend('Math.sqrt(')">√</button>
+            <button class="calc-btn" onclick="scientificAppend('Math.pow(')">^</button>
+            <button class="calc-btn" onclick="scientificAppend('(')">(</button>
+            <button class="calc-btn" onclick="scientificAppend(')')">)</button>
+            </div>
+            <div style="margin-top:10px; font-size:0.8em; color:#666; text-align:center;">
+            יש לסגור סוגריים בסוף הביטוי לפי הפונקציות
+            </div>
+        </div>
+
+        <script>
+        // תמיכה במקלדת פיזית למחשבון פשוט
+        document.addEventListener('keydown', function(e) {
+            const simpleCalcVisible = document.getElementById('simpleCalc').style.display !== 'none';
+            if (!simpleCalcVisible) return;
+            const allowed = '0123456789/*-+.';
+            if (allowed.includes(e.key)) {
+            simpleAppend(e.key);
+            e.preventDefault();
+            } else if (e.key === 'Enter' || e.key === '=') {
+            simpleCalculate();
+            e.preventDefault();
+            } else if (e.key === 'Backspace') {
+            simpleBackspace();
+            e.preventDefault();
+            } else if (e.key === 'Escape') {
+            simpleClear();
+            e.preventDefault();
+            }
+        });
+
+        // תמיכה במקלדת פיזית למחשבון מדעי
+        document.addEventListener('keydown', function(e) {
+            const scientificCalcVisible = document.getElementById('scientificCalc').style.display !== 'none';
+            if (!scientificCalcVisible) return;
+            const allowed = '0123456789/*-+.^()';
+            if (allowed.includes(e.key)) {
+            scientificAppend(e.key);
+            e.preventDefault();
+            } else if (e.key === 'Enter' || e.key === '=') {
+            scientificCalculate();
+            e.preventDefault();
+            } else if (e.key === 'Backspace') {
+            scientificBackspace();
+            e.preventDefault();
+            } else if (e.key === 'Escape') {
+            scientificClear();
+            e.preventDefault();
+            }
+            // פונקציות מדעיות קיצור: s=sin, c=cos, t=tan, l=log, n=ln, r=sqrt, p=pow
+            else if (e.key === 's') { scientificAppend('Math.sin('); e.preventDefault(); }
+            else if (e.key === 'c') { scientificAppend('Math.cos('); e.preventDefault(); }
+            else if (e.key === 't') { scientificAppend('Math.tan('); e.preventDefault(); }
+            else if (e.key === 'l') { scientificAppend('Math.log10('); e.preventDefault(); }
+            else if (e.key === 'n') { scientificAppend('Math.log('); e.preventDefault(); }
+            else if (e.key === 'r') { scientificAppend('Math.sqrt('); e.preventDefault(); }
+            else if (e.key === 'p') { scientificAppend('Math.pow('); e.preventDefault(); }
+        });
+        </script>
+        <!-- מחשבון מטבעות -->
+        <div class="calculator" id="currencyCalc" style="display:none; max-width:400px;">
+            <h2 style="text-align:center;margin-bottom:20px;">מחשבון המרת מטבעות</h2>
+            <div style="margin-bottom:15px;">
+                <input type="number" id="currencyAmount" class="display" placeholder="סכום להמרה" style="text-align:right;font-size:1.2em;" />
+            </div>
+            <div style="display:flex;gap:10px;margin-bottom:15px;">
+                <select id="fromCurrency" style="flex:1;padding:8px;font-size:1em;">
+                    <option value="ILS">ש"ח (ILS)</option>
+                    <option value="USD">דולר (USD)</option>
+                    <option value="EUR">אירו (EUR)</option>
+                    <option value="GBP">פאונד (GBP)</option>
+                </select>
+                <span style="align-self:center;">→</span>
+                <select id="toCurrency" style="flex:1;padding:8px;font-size:1em;">
+                    <option value="USD">דולר (USD)</option>
+                    <option value="ILS">ש"ח (ILS)</option>
+                    <option value="EUR">אירו (EUR)</option>
+                    <option value="GBP">פאונד (GBP)</option>
+                </select>
+            </div>
+            <button class="calc-btn" style="width:100%;margin-bottom:15px;" onclick="convertCurrency()">המר</button>
+            <div id="currencyResult" style="text-align:center;font-size:1.3em;min-height:2em;"></div>
+            <div style="font-size:0.9em;color:#888;text-align:center;margin-top:10px;">* שערים בזמן אמת, או אופליין מעודכן ל־20/7/2025</div>
+        </div>
+
+        <!-- מחשבון משקל -->
+        <div class="calculator" id="weightCalc" style="display:none; max-width:400px;">
+            <h2 style="text-align:center;margin-bottom:20px;">מחשבון המרת משקל</h2>
+            <div style="margin-bottom:15px;">
+                <input type="number" id="weightAmount" class="display" placeholder="כמות להמרה" style="text-align:right;font-size:1.2em;" />
+            </div>
+            <div style="display:flex;gap:10px;margin-bottom:15px;">
+                <select id="fromWeightUnit" style="flex:1;padding:8px;font-size:1em;">
+                    <option value="g">גרם (g)</option>
+                    <option value="kg">קילוגרם (kg)</option>
+                    <option value="lb">פאונד (lb)</option>
+                    <option value="oz">אונקיה (oz)</option>
+                </select>
+                <span style="align-self:center;">→</span>
+                <select id="toWeightUnit" style="flex:1;padding:8px;font-size:1em;">
+                    <option value="g">גרם (g)</option>
+                    <option value="kg">קילוגרם (kg)</option>
+                    <option value="lb">פאונד (lb)</option>
+                    <option value="oz">אונקיה (oz)</option>
+                </select>
+            </div>
+            <button class="calc-btn" style="width:100%;margin-bottom:15px;" onclick="convertWeight()">המר</button>
+            <div id="weightResult" style="text-align:center;font-size:1.3em;min-height:2em;"></div>
+        </div>
+
+        <!-- מחשבון אורך -->
+        <div class="calculator" id="lengthCalc" style="display:none; max-width:400px;">
+            <h2 style="text-align:center;margin-bottom:20px;">מחשבון המרת אורך</h2>
+            <div style="margin-bottom:15px;">
+                <input type="number" id="lengthAmount" class="display" placeholder="כמות להמרה" style="text-align:right;font-size:1.2em;" />
+            </div>
+            <div style="display:flex;gap:10px;margin-bottom:15px;">
+                <select id="fromLengthUnit" style="flex:1;padding:8px;font-size:1em;">
+                    <option value="mm">מ"מ (mm)</option>
+                    <option value="cm">ס"מ (cm)</option>
+                    <option value="m">מטר (m)</option>
+                    <option value="km">ק"מ (km)</option>
+                    <option value="in">אינץ' (in)</option>
+                    <option value="ft">פיט (ft)</option>
+                    <option value="yd">יארד (yd)</option>
+                    <option value="mi">מייל (mi)</option>
+                    <option value="nmi">מייל ימי (nmi)</option>
+                </select>
+                <span style="align-self:center;">→</span>
+                <select id="toLengthUnit" style="flex:1;padding:8px;font-size:1em;">
+                    <option value="mm">מ"מ (mm)</option>
+                    <option value="cm">ס"מ (cm)</option>
+                    <option value="m">מטר (m)</option>
+                    <option value="km">ק"מ (km)</option>
+                    <option value="in">אינץ' (in)</option>
+                    <option value="ft">פיט (ft)</option>
+                    <option value="yd">יארד (yd)</option>
+                    <option value="mi">מייל (mi)</option>
+                    <option value="nmi">מייל ימי (nmi)</option>
+                </select>
+            </div>
+            <button class="calc-btn" style="width:100%;margin-bottom:15px;" onclick="convertLength()">המר</button>
+            <div id="lengthResult" style="text-align:center;font-size:1.3em;min-height:2em;"></div>
+        </div>
+    </div>
+
+    <script>
+        function showCalculator(type) {
+            document.getElementById('simpleCalc').style.display = (type === 'simple') ? 'block' : 'none';
+            document.getElementById('scientificCalc').style.display = (type === 'scientific') ? 'block' : 'none';
+            document.getElementById('currencyCalc').style.display = (type === 'currency') ? 'block' : 'none';
+            document.getElementById('weightCalc').style.display = (type === 'weight') ? 'block' : 'none';
+            document.getElementById('lengthCalc').style.display = (type === 'length') ? 'block' : 'none';
+
+            document.getElementById('simpleBtn').classList.toggle('active', type === 'simple');
+            document.getElementById('scientificBtn').classList.toggle('active', type === 'scientific');
+            document.getElementById('currencyBtn').classList.toggle('active', type === 'currency');
+            document.getElementById('weightBtn').classList.toggle('active', type === 'weight');
+            document.getElementById('lengthBtn').classList.toggle('active', type === 'length');
+        }
+
+        // --- מחשבון פשוט ---
+        const simpleDisplay = document.getElementById('simpleDisplay');
+        function simpleAppend(val) {
+            simpleDisplay.value += val;
+        }
+        function simpleClear() {
+            simpleDisplay.value = '';
+        }
+        function simpleBackspace() {
+            simpleDisplay.value = simpleDisplay.value.slice(0, -1);
+        }
+        function simpleCalculate() {
+            try {
+                let result = eval(simpleDisplay.value);
+                if (typeof result === 'number' && !isNaN(result) && isFinite(result)) {
+                    simpleDisplay.value = result;
+                } else {
+                    simpleDisplay.value = 'שגיאה';
+                }
+            } catch {
+                simpleDisplay.value = 'שגיאה';
+            }
+        }
+
+        // --- מחשבון מדעי ---
+        const scientificDisplay = document.getElementById('scientificDisplay');
+        function scientificAppend(val) {
+            scientificDisplay.value += val;
+        }
+        function scientificClear() {
+            scientificDisplay.value = '';
+        }
+        function scientificBackspace() {
+            scientificDisplay.value = scientificDisplay.value.slice(0, -1);
+        }
+        function scientificCalculate() {
+            try {
+                let expression = scientificDisplay.value.replace(/\^/g, '**');
+                let result = eval(expression);
+                if (typeof result === 'number' && !isNaN(result) && isFinite(result)) {
+                    scientificDisplay.value = result;
+                } else {
+                    scientificDisplay.value = 'שגיאה';
+                }
+            } catch {
+                scientificDisplay.value = 'שגיאה';
+            }
+        }
+
+        // --- מחשבון מטבעות ---
+        async function convertCurrency() {
+            const amount = parseFloat(document.getElementById('currencyAmount').value);
+            const from = document.getElementById('fromCurrency').value;
+            const to = document.getElementById('toCurrency').value;
+            const resultDiv = document.getElementById('currencyResult');
+
+            if (isNaN(amount) || amount < 0) {
+                resultDiv.textContent = 'אנא הזן סכום חוקי';
+                return;
+            }
+
+            try {
+                const res = await fetch(`https://api.exchangerate.host/convert?from=${from}&to=${to}&amount=${amount}`);
+                const data = await res.json();
+
+                if (!data || typeof data.result !== 'number') throw new Error("שגיאה בנתונים");
+
+                resultDiv.textContent = data.result.toFixed(2) + ' ' + getCurrencySymbol(to);
+            } catch (e) {
+                // fallback לשערים אופליין עם תאריך עדכון
+                const offlineRates = {
+                    ILS: { ILS: 1, USD: 0.27, EUR: 0.25, GBP: 0.21 },
+                    USD: { ILS: 3.7, USD: 1, EUR: 0.93, GBP: 0.78 },
+                    EUR: { ILS: 4.0, USD: 1.08, EUR: 1, GBP: 0.84 },
+                    GBP: { ILS: 4.7, USD: 1.28, EUR: 1.19, GBP: 1 }
+                };
+
+                if (from === to) {
+                    resultDiv.textContent = amount + ' ' + getCurrencySymbol(to) + ' (מעודכן ל־20/7/2025)';
+                    return;
+                }
+
+                const rate = offlineRates[from]?.[to];
+                if (!rate) {
+                    resultDiv.textContent = 'שגיאה בהמרה';
+                    return;
+                }
+
+                const result = (amount * rate).toFixed(2);
+                resultDiv.textContent = result + ' ' + getCurrencySymbol(to) + ' (מעודכן ל־20/7/2025)';
+            }
+        }
+
+        function getCurrencySymbol(code) {
+            switch (code) {
+                case 'ILS': return '₪';
+                case 'USD': return '$';
+                case 'EUR': return '€';
+                case 'GBP': return '£';
+                default: return code;
+            }
+        }
+
+        // --- מחשבון משקל ---
+        function convertWeight() {
+            const amount = parseFloat(document.getElementById('weightAmount').value);
+            const from = document.getElementById('fromWeightUnit').value;
+            const to = document.getElementById('toWeightUnit').value;
+            const resultDiv = document.getElementById('weightResult');
+
+            if (isNaN(amount) || amount < 0) {
+                resultDiv.textContent = 'אנא הזן כמות חוקית';
+                return;
+            }
+
+            const toGrams = {
+                g: 1,
+                kg: 1000,
+                lb: 453.59237,
+                oz: 28.3495231
+            };
+
+            if (!toGrams[from] || !toGrams[to]) {
+                resultDiv.textContent = 'יחידות לא מוכרות';
+                return;
+            }
+
+            const grams = amount * toGrams[from];
+            const converted = grams / toGrams[to];
+
+            resultDiv.textContent = converted.toFixed(4) + ' ' + getWeightUnitName(to);
+        }
+
+        function getWeightUnitName(code) {
+            switch (code) {
+                case 'g': return 'גרם';
+                case 'kg': return 'קילוגרם';
+                case 'lb': return 'פאונד';
+                case 'oz': return 'אונקיה';
+                default: return code;
+            }
+        }
+
+        // --- מחשבון אורך ---
+        function convertLength() {
+            const amount = parseFloat(document.getElementById('lengthAmount').value);
+            const from = document.getElementById('fromLengthUnit').value;
+            const to = document.getElementById('toLengthUnit').value;
+            const resultDiv = document.getElementById('lengthResult');
+
+            if (isNaN(amount) || amount < 0) {
+                resultDiv.textContent = 'אנא הזן כמות חוקית';
+                return;
+            }
+
+            const toMeters = {
+                mm: 0.001,
+                cm: 0.01,
+                m: 1,
+                km: 1000,
+                in: 0.0254,
+                ft: 0.3048,
+                yd: 0.9144,
+                mi: 1609.344,
+                nmi: 1852   // מייל ימי
+            };
+
+            if (!toMeters[from] || !toMeters[to]) {
+                resultDiv.textContent = 'יחידות לא מוכרות';
+                return;
+            }
+
+            const meters = amount * toMeters[from];
+            const converted = meters / toMeters[to];
+
+            resultDiv.textContent = converted.toFixed(4) + ' ' + getLengthUnitName(to);
+        }
+
+        function getLengthUnitName(code) {
+            switch (code) {
+                case 'mm': return 'מ"מ';
+                case 'cm': return 'ס"מ';
+                case 'm': return 'מטר';
+                case 'km': return 'ק"מ';
+                case 'in': return 'אינץ\'';
+                case 'ft': return 'פיט';
+                case 'yd': return 'יארד';
+                case 'mi': return 'מייל';
+                case 'nmi': return 'מייל ימי';
+                default: return code;
+            }
+        }
+    </script>
+</body>
+</html>
