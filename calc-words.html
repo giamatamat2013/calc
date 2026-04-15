@@ -1,0 +1,323 @@
+<!-- calc-words.html — fragment -->
+<style>
+  .wc-title {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-align: center;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .wc-subtitle {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  .wc-examples {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 16px;
+    justify-content: center;
+  }
+  .wc-chip {
+    background: rgba(124,107,255,0.1);
+    border: 1px solid rgba(124,107,255,0.25);
+    border-radius: 20px;
+    padding: 4px 11px;
+    font-size: 0.73rem;
+    color: var(--accent);
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: var(--font-mono);
+    direction: ltr;
+  }
+  .wc-chip:hover {
+    background: rgba(124,107,255,0.2);
+    transform: translateY(-1px);
+  }
+  .wc-input-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .wc-input {
+    flex: 1;
+    background: var(--display-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 13px 16px;
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.18s;
+    direction: ltr;
+    text-align: left;
+  }
+  .wc-input:focus { border-color: var(--border-active); box-shadow: 0 0 0 3px var(--accent-glow); }
+  .wc-input::placeholder { color: var(--text-dim); direction: ltr; }
+  .wc-send-btn {
+    padding: 13px 18px;
+    background: linear-gradient(135deg, var(--accent), #5a4bdd);
+    border: none;
+    border-radius: var(--radius);
+    color: white;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.18s;
+    box-shadow: 0 4px 16px var(--accent-glow);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 48px;
+  }
+  .wc-send-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(124,107,255,0.5); }
+  .wc-send-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .wc-history {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 320px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  .wc-bubble {
+    border-radius: var(--radius);
+    padding: 12px 15px;
+    font-size: 0.88rem;
+    line-height: 1.55;
+    animation: wcIn 0.25s cubic-bezier(0.4,0,0.2,1);
+  }
+  @keyframes wcIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .wc-bubble.user {
+    background: rgba(124,107,255,0.12);
+    border: 1px solid rgba(124,107,255,0.2);
+    color: var(--text);
+    font-family: var(--font-mono);
+    direction: ltr;
+    text-align: left;
+  }
+  .wc-bubble.ai {
+    background: var(--display-bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    white-space: pre-wrap;
+  }
+  .wc-bubble.thinking {
+    background: var(--display-bg);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-style: italic;
+    font-size: 0.82rem;
+  }
+  .wc-bubble.error {
+    background: rgba(255,107,157,0.08);
+    border: 1px solid rgba(255,107,157,0.2);
+    color: #ff8ab0;
+    font-size: 0.82rem;
+  }
+  .wc-dots span {
+    display: inline-block;
+    animation: wcDot 1.2s infinite;
+    opacity: 0;
+  }
+  .wc-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .wc-dots span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes wcDot { 0%,80%,100%{opacity:0} 40%{opacity:1} }
+</style>
+
+<div class="wc-title">🧮 מחשבון מילים</div>
+<div class="wc-subtitle">כתוב תרגיל עם מילים — קבל תוצאה יצירתית</div>
+
+<!-- Example chips -->
+<div class="wc-examples">
+  <span class="wc-chip" onclick="wcUseExample(this)">🐱 + 🌊</span>
+  <span class="wc-chip" onclick="wcUseExample(this)">pizza × 3</span>
+  <span class="wc-chip" onclick="wcUseExample(this)">מחשב + חלון</span>
+  <span class="wc-chip" onclick="wcUseExample(this)">love - time</span>
+  <span class="wc-chip" onclick="wcUseExample(this)">☕ × Monday</span>
+  <span class="wc-chip" onclick="wcUseExample(this)">🎸 / school</span>
+</div>
+
+<!-- Input -->
+<div class="wc-input-row">
+  <input
+    type="text"
+    class="wc-input"
+    id="wc-input"
+    placeholder="כתוב תרגיל... למשל: cat + rain"
+    onkeydown="if(event.key==='Enter') wcSend()"
+  />
+  <button class="wc-send-btn" id="wc-send-btn" onclick="wcSend()">⟳</button>
+</div>
+
+<!-- GROQ API Key Input -->
+<div class="wc-input-row" style="margin-bottom: 8px;">
+  <input
+    type="password"
+    class="wc-input"
+    id="wc-groq-key"
+    placeholder="GROQ API Key (אופציונלי)"
+    style="font-family: monospace; font-size: 0.8rem;"
+    oninput="wcSaveGroqKey()"
+  />
+</div>
+
+<!-- History -->
+<div class="wc-history" id="wc-history"></div>
+
+<script>
+(function() {
+  var wcSysPrompt = 'אתה מחשבון מילים יצירתי. פתור ביטויים מתמטיים עם מילים בצורה הגיונית ומפתיעה.';
+  var wcChatHistory = [];
+  var wcGroqKey = '';
+
+  // Load system prompt from config.json and GROQ key from localStorage
+  fetch('config.json')
+    .then(function(r) { return r.json(); })
+    .then(function(cfg) { if (cfg.wordCalcSystemPrompt) wcSysPrompt = cfg.wordCalcSystemPrompt; })
+    .catch(function() {});
+
+  // Load GROQ key from localStorage
+  wcGroqKey = localStorage.getItem('wcGroqKey') || '';
+
+  // Set the input value
+  document.getElementById('wc-groq-key').value = wcGroqKey;
+
+  window.wcSaveGroqKey = function() {
+    wcGroqKey = document.getElementById('wc-groq-key').value.trim();
+    localStorage.setItem('wcGroqKey', wcGroqKey);
+  };
+
+  window.wcUseExample = function(el) {
+    document.getElementById('wc-input').value = el.textContent.trim();
+    document.getElementById('wc-input').focus();
+  };
+
+  window.wcSend = async function() {
+    var input = document.getElementById('wc-input');
+    var expr  = input.value.trim();
+    if (!expr) return;
+
+    // Wait for Firebase model to be ready (loaded async in index.html)
+    if (!window._fbModel) {
+      wcAddBubble('error', '⚠️ Firebase עדיין טוען, נסה שוב עוד שנייה');
+      return;
+    }
+
+    var btn = document.getElementById('wc-send-btn');
+    btn.disabled = true;
+    btn.textContent = '⏳';
+    input.value = '';
+
+    wcAddBubble('user', expr);
+    var thinkId = wcAddBubble('thinking', '<span class="wc-dots">מחשב<span>.</span><span>.</span><span>.</span></span>');
+
+    try {
+      var chat = window._fbModel.startChat({
+        systemInstruction: {
+          role: 'system',
+          parts: [{ text: wcSysPrompt }]
+        },
+        history: wcChatHistory
+      });
+
+      var result = await chat.sendMessage(expr);
+      var reply  = result.response.text();
+
+      wcChatHistory.push({ role: 'user',  parts: [{ text: expr  }] });
+      wcChatHistory.push({ role: 'model', parts: [{ text: reply }] });
+
+      document.getElementById(thinkId)?.remove();
+      wcAddBubble('ai', reply);
+    } catch(err) {
+      document.getElementById(thinkId)?.remove();
+      var errorMsg = err.message || 'שגיאת רשת';
+      var isQuotaError = errorMsg.includes('Quota exceeded') || errorMsg.includes('429');
+      if (isQuotaError && wcGroqKey) {
+        // Try GROQ as fallback
+        try {
+          var thinkId2 = wcAddBubble('thinking', '<span class="wc-dots">מנסה GROQ<span>.</span><span>.</span><span>.</span></span>');
+          var reply = await wcCallGroq(expr);
+          wcChatHistory.push({ role: 'user',  parts: [{ text: expr  }] });
+          wcChatHistory.push({ role: 'model', parts: [{ text: reply }] });
+          document.getElementById(thinkId2)?.remove();
+          wcAddBubble('ai', reply);
+        } catch(groqErr) {
+          document.getElementById(thinkId2)?.remove();
+          var groqErrorMsg = 'שגיאת GROQ: ';
+          if (groqErr.message.includes('400')) {
+            groqErrorMsg += 'בקשה לא תקינה - בדוק את מפתח ה-API או את הבקשה.';
+          } else if (groqErr.message.includes('401')) {
+            groqErrorMsg += 'מפתח API לא תקין.';
+          } else if (groqErr.message.includes('429')) {
+            groqErrorMsg += 'חרגת מהמכסה של GROQ.';
+          } else {
+            groqErrorMsg += groqErr.message;
+          }
+          wcAddBubble('error', '⚠️ ' + groqErrorMsg);
+        }
+      } else {
+        if (isQuotaError) {
+          errorMsg = 'חרגת מהמכסה. נסה שוב בעוד דקה.';
+          // Disable button for 60 seconds
+          var btn = document.getElementById('wc-send-btn');
+          btn.disabled = true;
+          btn.textContent = '⏳';
+          setTimeout(function() {
+            btn.disabled = false;
+            btn.textContent = '⟳';
+          }, 60000);
+        }
+        wcAddBubble('error', '⚠️ ' + errorMsg);
+      }
+    }
+
+    btn.disabled = false;
+    btn.textContent = '⟳';
+  };
+
+  function wcAddBubble(type, html) {
+    var id   = 'wc-b-' + Date.now() + Math.random().toString(36).slice(2);
+    var hist = document.getElementById('wc-history');
+    var div  = document.createElement('div');
+    div.className = 'wc-bubble ' + type;
+    div.id        = id;
+    div.innerHTML = html;
+    hist.appendChild(div);
+    hist.scrollTop = hist.scrollHeight;
+    return id;
+  }
+
+  async function wcCallGroq(expr) {
+    const messages = [{ role: 'system', content: wcSysPrompt }];
+    wcChatHistory.forEach(h => messages.push({ role: h.role === 'user' ? 'user' : 'assistant', content: h.parts[0].text }));
+    messages.push({ role: 'user', content: expr });
+
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + wcGroqKey
+      },
+      body: JSON.stringify({
+        model: 'llama-3.1-8b-instant',
+        messages: messages,
+        max_tokens: 200
+      })
+    });
+
+    if (!res.ok) throw new Error('GROQ API error: ' + res.status);
+
+    const data = await res.json();
+    return data.choices[0].message.content;
+  }
+})();
+</script>

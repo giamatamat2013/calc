@@ -1,0 +1,71 @@
+<!-- calc-length.html — fragment -->
+<div class="converter-title">📏 המרת אורך</div>
+
+<input
+  type="number"
+  id="ln-amount"
+  class="converter-input"
+  placeholder="0"
+  min="0"
+  oninput="lnConvert()"
+/>
+
+<div class="converter-row">
+  <select id="ln-from" class="converter-select" onchange="lnConvert()">
+    <option value="mm">מ"מ (mm)</option>
+    <option value="cm">ס"מ (cm)</option>
+    <option value="m" selected>מטר (m)</option>
+    <option value="km">ק"מ (km)</option>
+    <option value="in">אינץ' (in)</option>
+    <option value="ft">פיט (ft)</option>
+    <option value="yd">יארד (yd)</option>
+    <option value="mi">מייל (mi)</option>
+    <option value="nmi">מייל ימי (nmi)</option>
+  </select>
+
+  <span class="arrow-icon">⇄</span>
+
+  <select id="ln-to" class="converter-select" onchange="lnConvert()">
+    <option value="mm">מ"מ (mm)</option>
+    <option value="cm">ס"מ (cm)</option>
+    <option value="m">מטר (m)</option>
+    <option value="km">ק"מ (km)</option>
+    <option value="in" selected>אינץ' (in)</option>
+    <option value="ft">פיט (ft)</option>
+    <option value="yd">יארד (yd)</option>
+    <option value="mi">מייל (mi)</option>
+    <option value="nmi">מייל ימי (nmi)</option>
+  </select>
+</div>
+
+<div class="result-box" id="ln-result">
+  <span class="result-empty">הזן כמות להמרה</span>
+</div>
+
+<script>
+  const LN_TO_M = {
+    mm:0.001, cm:0.01, m:1, km:1000,
+    in:0.0254, ft:0.3048, yd:0.9144, mi:1609.344, nmi:1852
+  };
+  const LN_NAMES = {
+    mm:'מ"מ', cm:'ס"מ', m:'מטר', km:'ק"מ',
+    in:"אינץ'", ft:'פיט', yd:'יארד', mi:'מייל', nmi:'מייל ימי'
+  };
+
+  function lnConvert() {
+    const amount = parseFloat(document.getElementById('ln-amount').value);
+    const from   = document.getElementById('ln-from').value;
+    const to     = document.getElementById('ln-to').value;
+    const box    = document.getElementById('ln-result');
+
+    if (isNaN(amount) || amount < 0) {
+      box.innerHTML = '<span class="result-empty">הזן כמות חוקית</span>'; return;
+    }
+
+    const meters = amount * LN_TO_M[from];
+    const result = meters / LN_TO_M[to];
+    const fmt    = result < 0.001 ? result.toExponential(3) : parseFloat(result.toFixed(6)).toString();
+
+    box.innerHTML = `<span class="result-value">${fmt} <span style="font-size:.85rem;opacity:.6">${LN_NAMES[to]}</span></span>`;
+  }
+</script>

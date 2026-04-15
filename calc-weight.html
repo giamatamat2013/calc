@@ -1,0 +1,59 @@
+<!-- calc-weight.html — fragment -->
+<div class="converter-title">⚖️ המרת משקל</div>
+
+<input
+  type="number"
+  id="wt-amount"
+  class="converter-input"
+  placeholder="0"
+  min="0"
+  oninput="wtConvert()"
+/>
+
+<div class="converter-row">
+  <select id="wt-from" class="converter-select" onchange="wtConvert()">
+    <option value="g">גרם (g)</option>
+    <option value="kg" selected>קילוגרם (kg)</option>
+    <option value="lb">פאונד (lb)</option>
+    <option value="oz">אונקיה (oz)</option>
+    <option value="t">טון (t)</option>
+    <option value="mg">מיליגרם (mg)</option>
+  </select>
+
+  <span class="arrow-icon">⇄</span>
+
+  <select id="wt-to" class="converter-select" onchange="wtConvert()">
+    <option value="g">גרם (g)</option>
+    <option value="kg">קילוגרם (kg)</option>
+    <option value="lb" selected>פאונד (lb)</option>
+    <option value="oz">אונקיה (oz)</option>
+    <option value="t">טון (t)</option>
+    <option value="mg">מיליגרם (mg)</option>
+  </select>
+</div>
+
+<div class="result-box" id="wt-result">
+  <span class="result-empty">הזן כמות להמרה</span>
+</div>
+
+<script>
+  const WT_TO_G = { mg:0.001, g:1, kg:1000, lb:453.59237, oz:28.3495231, t:1e6 };
+  const WT_NAMES = { mg:'מ"ג', g:'גרם', kg:'ק"ג', lb:'פאונד', oz:'אונקיה', t:'טון' };
+
+  function wtConvert() {
+    const amount = parseFloat(document.getElementById('wt-amount').value);
+    const from   = document.getElementById('wt-from').value;
+    const to     = document.getElementById('wt-to').value;
+    const box    = document.getElementById('wt-result');
+
+    if (isNaN(amount) || amount < 0) {
+      box.innerHTML = '<span class="result-empty">הזן כמות חוקית</span>'; return;
+    }
+
+    const grams   = amount * WT_TO_G[from];
+    const result  = grams / WT_TO_G[to];
+    const fmt     = result < 0.001 ? result.toExponential(3) : parseFloat(result.toFixed(6)).toString();
+
+    box.innerHTML = `<span class="result-value">${fmt} <span style="font-size:.85rem;opacity:.6">${WT_NAMES[to]}</span></span>`;
+  }
+</script>

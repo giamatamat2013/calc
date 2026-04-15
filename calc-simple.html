@@ -1,0 +1,98 @@
+<!-- calc-simple.html — fragment, loaded into base.html -->
+<div class="display-wrap">
+  <div class="display-expr" id="s-expr"></div>
+  <div class="display-main" id="s-display">0</div>
+</div>
+
+<div class="buttons">
+  <button class="calc-btn clear"       onclick="sClear()">AC</button>
+  <button class="calc-btn clear"       onclick="sBack()">⌫</button>
+  <button class="calc-btn op"          onclick="sAppend('%')">%</button>
+  <button class="calc-btn op"          onclick="sAppend('/')">÷</button>
+
+  <button class="calc-btn"             onclick="sAppend('7')">7</button>
+  <button class="calc-btn"             onclick="sAppend('8')">8</button>
+  <button class="calc-btn"             onclick="sAppend('9')">9</button>
+  <button class="calc-btn op"          onclick="sAppend('*')">×</button>
+
+  <button class="calc-btn"             onclick="sAppend('4')">4</button>
+  <button class="calc-btn"             onclick="sAppend('5')">5</button>
+  <button class="calc-btn"             onclick="sAppend('6')">6</button>
+  <button class="calc-btn op"          onclick="sAppend('-')">−</button>
+
+  <button class="calc-btn"             onclick="sAppend('1')">1</button>
+  <button class="calc-btn"             onclick="sAppend('2')">2</button>
+  <button class="calc-btn"             onclick="sAppend('3')">3</button>
+  <button class="calc-btn op"          onclick="sAppend('+')">+</button>
+
+  <button class="calc-btn"             onclick="sToggleSign()">+/−</button>
+  <button class="calc-btn"             onclick="sAppend('0')">0</button>
+  <button class="calc-btn"             onclick="sAppend('.')">.</button>
+  <button class="calc-btn eq"          onclick="sCalc()">=</button>
+</div>
+
+<script>
+  let sExpr = '', sJustCalc = false;
+
+  const sDisp = () => document.getElementById('s-display');
+  const sExprEl = () => document.getElementById('s-expr');
+
+  function sAppend(v) {
+    if (sJustCalc) {
+      // after = pressed, operators continue the chain, digits start fresh
+      if ('+-*/'.includes(v)) { sExpr = sDisp().textContent; }
+      else { sExpr = ''; sDisp().textContent = '0'; }
+      sJustCalc = false;
+    }
+    let cur = sDisp().textContent;
+    if (cur === '0' && !'./+-*%'.includes(v)) cur = '';
+    if (cur === 'שגיאה') cur = '';
+    sDisp().textContent = cur + v;
+    sExprEl().textContent = sExpr + cur + v;
+  }
+
+  function sClear() {
+    sExpr = ''; sJustCalc = false;
+    sDisp().textContent = '0';
+    sExprEl().textContent = '';
+  }
+
+  function sBack() {
+    let cur = sDisp().textContent;
+    if (cur === 'שגיאה') { sClear(); return; }
+    cur = cur.length > 1 ? cur.slice(0, -1) : '0';
+    sDisp().textContent = cur;
+  }
+
+  function sToggleSign() {
+    let cur = sDisp().textContent;
+    if (cur === '0' || cur === 'שגיאה') return;
+    sDisp().textContent = cur.startsWith('-') ? cur.slice(1) : '-' + cur;
+  }
+
+  function sCalc() {
+    let expr = sDisp().textContent;
+    if (expr === 'שגיאה') return;
+    sExprEl().textContent = expr + ' =';
+    try {
+      let r = eval(expr.replace(/÷/g, '/').replace(/×/g, '*').replace(/−/g, '-'));
+      if (typeof r !== 'number' || !isFinite(r)) throw 0;
+      // nice decimal
+      sDisp().textContent = parseFloat(r.toFixed(10)).toString();
+    } catch { sDisp().textContent = 'שגיאה'; }
+    sJustCalc = true;
+    sExpr = '';
+  }
+
+  // Keyboard support
+  document.addEventListener('keydown', function sk(e) {
+    if (!document.getElementById('s-display')) {
+      document.removeEventListener('keydown', sk); return;
+    }
+    const map = {Enter:'=','=':'='};
+    if ('0123456789.+-*/%'.includes(e.key)) { sAppend(e.key); e.preventDefault(); }
+    else if (e.key === 'Backspace') { sBack(); e.preventDefault(); }
+    else if (e.key === 'Escape') { sClear(); e.preventDefault(); }
+    else if (e.key === 'Enter' || e.key === '=') { sCalc(); e.preventDefault(); }
+  });
+</script>

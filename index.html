@@ -1,556 +1,598 @@
 <!DOCTYPE html>
 <html lang="he">
 <head>
-    <meta charset="UTF-8" />
-    <title>מחשבון עם תפריט צד</title>
-    <style>
-        body {
-            font-family: "Segoe UI", Arial, sans-serif;
-            background: linear-gradient(145deg, #f0f4f8 0%, #d9e2ec 100%);
-            direction: rtl;
-            margin: 0;
-            min-height: 100vh;
-            box-sizing: border-box;
-            display: flex;
-        }
-        .sidebar {
-            width: 200px;
-            background: #4a90e2;
-            color: #fff;
-            min-height: 100vh;
-            padding-top: 40px;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.07);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .sidebar button {
-            background: none;
-            border: none;
-            color: #fff;
-            font-size: 1.2em;
-            margin: 15px 0;
-            cursor: pointer;
-            padding: 10px 0;
-            width: 100%;
-            transition: background 0.2s;
-        }
-        .sidebar button.active,
-        .sidebar button:hover {
-            background: #357ab8;
-        }
-        .main-content {
-            flex: 1;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            padding: 40px 0;
-        }
-        .calculator {
-            background: #fff;
-            width: 100%;
-            max-width: 400px;
-            margin: 0 auto;
-            padding: 32px;
-            border-radius: 15px;
-            box-shadow: 0 0 15px rgba(0,0,0,0.1);
-        }
-        .display {
-            width: 100%;
-            height: 60px;
-            font-size: 2em;
-            text-align: left;
-            margin-bottom: 20px;
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid #cfd8dc;
-            background: #e6ecf0;
-            box-sizing: border-box;
-            direction: ltr;
-        }
-        .buttons {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 14px;
-        }
-        button.calc-btn {
-            padding: 18px;
-            font-size: 1.2em;
-            border: none;
-            border-radius: 50px;
-            background: #4a90e2;
-            color: white;
-            cursor: pointer;
-            transition: background 0.2s, transform 0.2s;
-            box-shadow: 0 1px 3px #b0bec5;
-            width: 100%;
-            box-sizing: border-box;
-        }
-        button.calc-btn:hover {
-            background: #357ab8;
-            transform: scale(1.05);
-        }
-        .span-2 { grid-column: span 2; }
-        @media (max-width: 700px) {
-            .sidebar {
-                width: 60px;
-                padding-top: 10px;
-            }
-            .sidebar button {
-                font-size: 0.9em;
-                padding: 8px 0;
-            }
-            .main-content {
-                padding: 10px 0;
-            }
-            .calculator {
-                max-width: 98vw;
-                padding: 10px;
-            }
-            .display {
-                height: 40px;
-                font-size: 1.1em;
-                padding: 6px;
-            }
-            button.calc-btn {
-                padding: 10px;
-                font-size: 1em;
-            }
-            .buttons {
-                gap: 6px;
-            }
-        }
-        /* טקסט בכפתורי בחירה במחשבון משקל ואורך */
-        select, input {
-            font-size: 1em;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title id="page-title">מחשבון</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    /* ============================================================
+       CSS VARIABLES — שנה כאן, יתעדכן בכל המחשבונים
+    ============================================================ */
+    :root {
+      --bg:            #0f0f13;
+      --bg-panel:      #17171f;
+      --bg-card:       #1e1e2a;
+      --bg-card-hover: #252533;
+      --sidebar-w:     220px;
+      --accent:        #7c6bff;
+      --accent-2:      #ff6b9d;
+      --accent-glow:   rgba(124, 107, 255, 0.35);
+      --text:          #e8e6f0;
+      --text-muted:    #7a788a;
+      --text-dim:      #4a4860;
+      --border:        rgba(255,255,255,0.07);
+      --border-active: rgba(124,107,255,0.5);
+      --display-bg:    #0a0a10;
+      --btn-num:       #1e1e2a;
+      --btn-op:        #2a1f4a;
+      --btn-eq:        var(--accent);
+      --btn-clear:     #3a1a2a;
+      --radius:        14px;
+      --radius-sm:     8px;
+      --font-ui:       'Rubik', sans-serif;
+      --font-mono:     'JetBrains Mono', monospace;
+      --transition:    0.18s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* ============================================================
+       RESET & BASE
+    ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-ui);
+      background: var(--bg);
+      color: var(--text);
+      direction: rtl;
+      min-height: 100vh;
+      display: flex;
+      overflow-x: hidden;
+    }
+
+    /* Subtle grid background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(124,107,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(124,107,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ============================================================
+       SIDEBAR
+    ============================================================ */
+    .sidebar {
+      width: var(--sidebar-w);
+      min-height: 100vh;
+      background: var(--bg-panel);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 24px 0;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      flex-shrink: 0;
+    }
+
+    .sidebar-logo {
+      padding: 0 20px 28px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 16px;
+    }
+
+    .sidebar-logo span {
+      font-size: 1.1rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.02em;
+    }
+
+    .sidebar-logo small {
+      display: block;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      font-weight: 400;
+      margin-top: 2px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 20px;
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      font-weight: 500;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: right;
+      transition: all var(--transition);
+      position: relative;
+      border-radius: 0;
+    }
+
+    .nav-item .icon {
+      font-size: 1.1rem;
+      flex-shrink: 0;
+      width: 20px;
+      text-align: center;
+    }
+
+    .nav-item:hover {
+      color: var(--text);
+      background: rgba(255,255,255,0.04);
+    }
+
+    .nav-item.active {
+      color: var(--accent);
+      background: rgba(124,107,255,0.1);
+    }
+
+    .nav-item.active::before {
+      content: '';
+      position: absolute;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: linear-gradient(180deg, var(--accent), var(--accent-2));
+      border-radius: 0 0 0 3px;
+    }
+
+    /* ============================================================
+       MAIN CONTENT
+    ============================================================ */
+    .main {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 48px 24px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ============================================================
+       CARD / CALCULATOR WRAPPER
+    ============================================================ */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.4), 0 0 0 1px var(--border);
+      animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ============================================================
+       DISPLAY
+    ============================================================ */
+    .display-wrap {
+      background: var(--display-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      margin-bottom: 20px;
+      min-height: 72px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: flex-end;
+      gap: 4px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .display-wrap::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(124,107,255,0.03), transparent);
+      pointer-events: none;
+    }
+
+    .display-expr {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      min-height: 1em;
+      word-break: break-all;
+      text-align: right;
+      direction: ltr;
+    }
+
+    .display-main {
+      font-family: var(--font-mono);
+      font-size: 2.1rem;
+      font-weight: 600;
+      color: var(--text);
+      word-break: break-all;
+      text-align: right;
+      direction: ltr;
+      line-height: 1;
+      width: 100%;
+    }
+
+    /* Legacy support for simple input display */
+    input.display {
+      background: transparent;
+      border: none;
+      outline: none;
+      font-family: var(--font-mono);
+      font-size: 2rem;
+      font-weight: 600;
+      color: var(--text);
+      direction: ltr;
+      text-align: right;
+      width: 100%;
+      caret-color: var(--accent);
+    }
+
+    /* ============================================================
+       BUTTON GRID
+    ============================================================ */
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    .calc-btn {
+      padding: 0;
+      height: 58px;
+      font-size: 1rem;
+      font-family: var(--font-ui);
+      font-weight: 500;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--btn-num);
+      color: var(--text);
+      cursor: pointer;
+      transition: all var(--transition);
+      position: relative;
+      overflow: hidden;
+      letter-spacing: 0;
+    }
+
+    .calc-btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: white;
+      opacity: 0;
+      transition: opacity 0.1s;
+      border-radius: inherit;
+    }
+
+    .calc-btn:active::after { opacity: 0.07; }
+
+    .calc-btn:hover {
+      background: var(--bg-card-hover);
+      border-color: rgba(255,255,255,0.12);
+      transform: translateY(-1px);
+    }
+
+    /* Operator buttons */
+    .calc-btn.op {
+      background: var(--btn-op);
+      color: #b8aaff;
+      font-size: 1.15rem;
+      border-color: rgba(124,107,255,0.2);
+    }
+
+    .calc-btn.op:hover {
+      background: rgba(124,107,255,0.25);
+      border-color: var(--border-active);
+    }
+
+    /* Equals button */
+    .calc-btn.eq {
+      background: linear-gradient(135deg, var(--accent), #5a4bdd);
+      border-color: transparent;
+      color: white;
+      font-size: 1.3rem;
+      font-weight: 600;
+      box-shadow: 0 4px 20px var(--accent-glow);
+    }
+
+    .calc-btn.eq:hover {
+      box-shadow: 0 6px 28px rgba(124,107,255,0.5);
+      transform: translateY(-2px);
+    }
+
+    /* Clear / backspace */
+    .calc-btn.clear {
+      background: var(--btn-clear);
+      color: #ff8ab0;
+      border-color: rgba(255,107,157,0.2);
+    }
+
+    .calc-btn.clear:hover {
+      background: rgba(255,107,157,0.15);
+      border-color: rgba(255,107,157,0.4);
+    }
+
+    /* Span utilities */
+    .span-2 { grid-column: span 2; }
+    .span-3 { grid-column: span 3; }
+    .span-4 { grid-column: span 4; }
+
+    /* ============================================================
+       CONVERTER COMPONENTS (currency, weight, length)
+    ============================================================ */
+    .converter-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-align: center;
+      margin-bottom: 24px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 0.78rem;
+    }
+
+    .converter-input {
+      width: 100%;
+      background: var(--display-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      font-family: var(--font-mono);
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--text);
+      text-align: right;
+      outline: none;
+      margin-bottom: 16px;
+      transition: border-color var(--transition);
+    }
+
+    .converter-input:focus {
+      border-color: var(--border-active);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .converter-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .converter-select {
+      flex: 1;
+      background: var(--btn-num);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      font-family: var(--font-ui);
+      font-size: 0.88rem;
+      color: var(--text);
+      outline: none;
+      cursor: pointer;
+      transition: border-color var(--transition);
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%237a788a' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: left 10px center;
+    }
+
+    .converter-select:focus { border-color: var(--border-active); }
+
+    .arrow-icon {
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+
+    .convert-btn {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, var(--accent), #5a4bdd);
+      border: none;
+      border-radius: var(--radius);
+      color: white;
+      font-family: var(--font-ui);
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 16px;
+      transition: all var(--transition);
+      box-shadow: 0 4px 20px var(--accent-glow);
+      letter-spacing: 0.02em;
+    }
+
+    .convert-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(124,107,255,0.5);
+    }
+
+    .result-box {
+      background: var(--display-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      text-align: center;
+      min-height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .result-value {
+      font-family: var(--font-mono);
+      font-size: 1.6rem;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .result-empty { color: var(--text-dim); font-size: 0.85rem; }
+
+    .note {
+      text-align: center;
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      margin-top: 12px;
+    }
+
+    /* ============================================================
+       SECTION HINT (for scientific calculator)
+    ============================================================ */
+    .hint {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      text-align: center;
+      margin-top: 12px;
+    }
+
+    /* ============================================================
+       RESPONSIVE
+    ============================================================ */
+    @media (max-width: 600px) {
+      .sidebar {
+        width: 56px;
+        padding: 16px 0;
+      }
+
+      .sidebar-logo, .nav-item span { display: none; }
+
+      .nav-item {
+        justify-content: center;
+        padding: 14px;
+      }
+
+      .nav-item .icon { width: auto; }
+
+      .main { padding: 24px 12px; }
+      .card { padding: 16px; }
+
+      .calc-btn { height: 50px; font-size: 0.92rem; }
+      .buttons { gap: 7px; }
+      .display-main { font-size: 1.7rem; }
+    }
+  </style>
+
+  <!-- Firebase AI Logic — loaded once, available globally for all fragments -->
+  <script>
+    // Bootstrap Firebase as globals so fragments (loaded via innerHTML) can use them
+    (async () => {
+      const { initializeApp }        = await import('https://www.gstatic.com/firebasejs/11.9.0/firebase-app.js');
+      const { getAI, getGenerativeModel, GoogleAIBackend } = await import('https://www.gstatic.com/firebasejs/11.9.0/firebase-ai.js');
+
+      const app = initializeApp({
+        apiKey:            "AIzaSyCr5v0fLT8QA2lr-6JCJTx9Cu0L9AMzDU8",
+        authDomain:        "calc-giamatamat.firebaseapp.com",
+        projectId:         "calc-giamatamat",
+        storageBucket:     "calc-giamatamat.firebasestorage.app",
+        messagingSenderId: "933317440893",
+        appId:             "1:933317440893:web:c5046584fd2b75822cc814",
+        measurementId:     "G-WZQH89JT73"
+      });
+
+      const ai = getAI(app, { backend: new GoogleAIBackend() });
+      window._fbModel = getGenerativeModel(ai, { model: 'gemini-2.0-flash' });
+    })();
+  </script>
 </head>
 <body>
-    <div class="sidebar">
-        <button id="simpleBtn" class="active" onclick="showCalculator('simple')">מחשבון פשוט</button>
-        <button id="scientificBtn" onclick="showCalculator('scientific')">מחשבון מדעי</button>
-        <button id="currencyBtn" onclick="showCalculator('currency')">מחשבון מטבעות</button>
-        <button id="weightBtn" onclick="showCalculator('weight')">מחשבון משקל</button>
-        <button id="lengthBtn" onclick="showCalculator('length')">מחשבון אורך</button>
-    </div>
-    <div class="main-content">
-        <!-- מחשבון פשוט -->
-        <div class="calculator" id="simpleCalc">
-            <input type="text" class="display" id="simpleDisplay" readonly />
-            <div class="buttons">
-            <button class="calc-btn" onclick="simpleAppend('7')">7</button>
-            <button class="calc-btn" onclick="simpleAppend('8')">8</button>
-            <button class="calc-btn" onclick="simpleAppend('9')">9</button>
-            <button class="calc-btn" onclick="simpleAppend('/')">÷</button>
-
-            <button class="calc-btn" onclick="simpleAppend('4')">4</button>
-            <button class="calc-btn" onclick="simpleAppend('5')">5</button>
-            <button class="calc-btn" onclick="simpleAppend('6')">6</button>
-            <button class="calc-btn" onclick="simpleAppend('*')">×</button>
-
-            <button class="calc-btn" onclick="simpleAppend('1')">1</button>
-            <button class="calc-btn" onclick="simpleAppend('2')">2</button>
-            <button class="calc-btn" onclick="simpleAppend('3')">3</button>
-            <button class="calc-btn" onclick="simpleAppend('-')">-</button>
-
-            <button class="calc-btn" onclick="simpleAppend('0')">0</button>
-            <button class="calc-btn" onclick="simpleAppend('.')">.</button>
-            <button class="calc-btn" onclick="simpleCalculate()">=</button>
-            <button class="calc-btn" onclick="simpleAppend('+')">+</button>
-
-            <button class="calc-btn span-2" onclick="simpleClear()">AC</button>
-            <button class="calc-btn span-2" onclick="simpleBackspace()">C</button>
-            </div>
-        </div>
-
-        <!-- מחשבון מדעי -->
-        <div class="calculator" id="scientificCalc" style="display:none;">
-            <input type="text" class="display" id="scientificDisplay" readonly />
-            <div class="buttons">
-            <button class="calc-btn" onclick="scientificAppend('7')">7</button>
-            <button class="calc-btn" onclick="scientificAppend('8')">8</button>
-            <button class="calc-btn" onclick="scientificAppend('9')">9</button>
-            <button class="calc-btn" onclick="scientificAppend('/')">÷</button>
-
-            <button class="calc-btn" onclick="scientificAppend('4')">4</button>
-            <button class="calc-btn" onclick="scientificAppend('5')">5</button>
-            <button class="calc-btn" onclick="scientificAppend('6')">6</button>
-            <button class="calc-btn" onclick="scientificAppend('*')">×</button>
-
-            <button class="calc-btn" onclick="scientificAppend('1')">1</button>
-            <button class="calc-btn" onclick="scientificAppend('2')">2</button>
-            <button class="calc-btn" onclick="scientificAppend('3')">3</button>
-            <button class="calc-btn" onclick="scientificAppend('-')">-</button>
-
-            <button class="calc-btn" onclick="scientificAppend('0')">0</button>
-            <button class="calc-btn" onclick="scientificAppend('.')">.</button>
-            <button class="calc-btn" onclick="scientificCalculate()">=</button>
-            <button class="calc-btn" onclick="scientificAppend('+')">+</button>
-
-            <button class="calc-btn span-2" onclick="scientificClear()">AC</button>
-            <button class="calc-btn span-2" onclick="scientificBackspace()">C</button>
-
-            <!-- פונקציות מדעיות -->
-            <button class="calc-btn" onclick="scientificAppend('Math.sin(')">sin</button>
-            <button class="calc-btn" onclick="scientificAppend('Math.cos(')">cos</button>
-            <button class="calc-btn" onclick="scientificAppend('Math.tan(')">tan</button>
-            <button class="calc-btn" onclick="scientificAppend('Math.log10(')">log</button>
-
-            <button class="calc-btn" onclick="scientificAppend('Math.log(')">ln</button>
-            <button class="calc-btn" onclick="scientificAppend('Math.sqrt(')">√</button>
-            <button class="calc-btn" onclick="scientificAppend('Math.pow(')">^</button>
-            <button class="calc-btn" onclick="scientificAppend('(')">(</button>
-            <button class="calc-btn" onclick="scientificAppend(')')">)</button>
-            </div>
-            <div style="margin-top:10px; font-size:0.8em; color:#666; text-align:center;">
-            יש לסגור סוגריים בסוף הביטוי לפי הפונקציות
-            </div>
-        </div>
-
-        <script>
-        // תמיכה במקלדת פיזית למחשבון פשוט
-        document.addEventListener('keydown', function(e) {
-            const simpleCalcVisible = document.getElementById('simpleCalc').style.display !== 'none';
-            if (!simpleCalcVisible) return;
-            const allowed = '0123456789/*-+.';
-            if (allowed.includes(e.key)) {
-            simpleAppend(e.key);
-            e.preventDefault();
-            } else if (e.key === 'Enter' || e.key === '=') {
-            simpleCalculate();
-            e.preventDefault();
-            } else if (e.key === 'Backspace') {
-            simpleBackspace();
-            e.preventDefault();
-            } else if (e.key === 'Escape') {
-            simpleClear();
-            e.preventDefault();
-            }
-        });
-
-        // תמיכה במקלדת פיזית למחשבון מדעי
-        document.addEventListener('keydown', function(e) {
-            const scientificCalcVisible = document.getElementById('scientificCalc').style.display !== 'none';
-            if (!scientificCalcVisible) return;
-            const allowed = '0123456789/*-+.^()';
-            if (allowed.includes(e.key)) {
-            scientificAppend(e.key);
-            e.preventDefault();
-            } else if (e.key === 'Enter' || e.key === '=') {
-            scientificCalculate();
-            e.preventDefault();
-            } else if (e.key === 'Backspace') {
-            scientificBackspace();
-            e.preventDefault();
-            } else if (e.key === 'Escape') {
-            scientificClear();
-            e.preventDefault();
-            }
-            // פונקציות מדעיות קיצור: s=sin, c=cos, t=tan, l=log, n=ln, r=sqrt, p=pow
-            else if (e.key === 's') { scientificAppend('Math.sin('); e.preventDefault(); }
-            else if (e.key === 'c') { scientificAppend('Math.cos('); e.preventDefault(); }
-            else if (e.key === 't') { scientificAppend('Math.tan('); e.preventDefault(); }
-            else if (e.key === 'l') { scientificAppend('Math.log10('); e.preventDefault(); }
-            else if (e.key === 'n') { scientificAppend('Math.log('); e.preventDefault(); }
-            else if (e.key === 'r') { scientificAppend('Math.sqrt('); e.preventDefault(); }
-            else if (e.key === 'p') { scientificAppend('Math.pow('); e.preventDefault(); }
-        });
-        </script>
-        <!-- מחשבון מטבעות -->
-        <div class="calculator" id="currencyCalc" style="display:none; max-width:400px;">
-            <h2 style="text-align:center;margin-bottom:20px;">מחשבון המרת מטבעות</h2>
-            <div style="margin-bottom:15px;">
-                <input type="number" id="currencyAmount" class="display" placeholder="סכום להמרה" style="text-align:right;font-size:1.2em;" />
-            </div>
-            <div style="display:flex;gap:10px;margin-bottom:15px;">
-                <select id="fromCurrency" style="flex:1;padding:8px;font-size:1em;">
-                    <option value="ILS">ש"ח (ILS)</option>
-                    <option value="USD">דולר (USD)</option>
-                    <option value="EUR">אירו (EUR)</option>
-                    <option value="GBP">פאונד (GBP)</option>
-                </select>
-                <span style="align-self:center;">→</span>
-                <select id="toCurrency" style="flex:1;padding:8px;font-size:1em;">
-                    <option value="USD">דולר (USD)</option>
-                    <option value="ILS">ש"ח (ILS)</option>
-                    <option value="EUR">אירו (EUR)</option>
-                    <option value="GBP">פאונד (GBP)</option>
-                </select>
-            </div>
-            <button class="calc-btn" style="width:100%;margin-bottom:15px;" onclick="convertCurrency()">המר</button>
-            <div id="currencyResult" style="text-align:center;font-size:1.3em;min-height:2em;"></div>
-            <div style="font-size:0.9em;color:#888;text-align:center;margin-top:10px;">* שערים בזמן אמת, או אופליין מעודכן ל־20/7/2025</div>
-        </div>
-
-        <!-- מחשבון משקל -->
-        <div class="calculator" id="weightCalc" style="display:none; max-width:400px;">
-            <h2 style="text-align:center;margin-bottom:20px;">מחשבון המרת משקל</h2>
-            <div style="margin-bottom:15px;">
-                <input type="number" id="weightAmount" class="display" placeholder="כמות להמרה" style="text-align:right;font-size:1.2em;" />
-            </div>
-            <div style="display:flex;gap:10px;margin-bottom:15px;">
-                <select id="fromWeightUnit" style="flex:1;padding:8px;font-size:1em;">
-                    <option value="g">גרם (g)</option>
-                    <option value="kg">קילוגרם (kg)</option>
-                    <option value="lb">פאונד (lb)</option>
-                    <option value="oz">אונקיה (oz)</option>
-                </select>
-                <span style="align-self:center;">→</span>
-                <select id="toWeightUnit" style="flex:1;padding:8px;font-size:1em;">
-                    <option value="g">גרם (g)</option>
-                    <option value="kg">קילוגרם (kg)</option>
-                    <option value="lb">פאונד (lb)</option>
-                    <option value="oz">אונקיה (oz)</option>
-                </select>
-            </div>
-            <button class="calc-btn" style="width:100%;margin-bottom:15px;" onclick="convertWeight()">המר</button>
-            <div id="weightResult" style="text-align:center;font-size:1.3em;min-height:2em;"></div>
-        </div>
-
-        <!-- מחשבון אורך -->
-        <div class="calculator" id="lengthCalc" style="display:none; max-width:400px;">
-            <h2 style="text-align:center;margin-bottom:20px;">מחשבון המרת אורך</h2>
-            <div style="margin-bottom:15px;">
-                <input type="number" id="lengthAmount" class="display" placeholder="כמות להמרה" style="text-align:right;font-size:1.2em;" />
-            </div>
-            <div style="display:flex;gap:10px;margin-bottom:15px;">
-                <select id="fromLengthUnit" style="flex:1;padding:8px;font-size:1em;">
-                    <option value="mm">מ"מ (mm)</option>
-                    <option value="cm">ס"מ (cm)</option>
-                    <option value="m">מטר (m)</option>
-                    <option value="km">ק"מ (km)</option>
-                    <option value="in">אינץ' (in)</option>
-                    <option value="ft">פיט (ft)</option>
-                    <option value="yd">יארד (yd)</option>
-                    <option value="mi">מייל (mi)</option>
-                    <option value="nmi">מייל ימי (nmi)</option>
-                </select>
-                <span style="align-self:center;">→</span>
-                <select id="toLengthUnit" style="flex:1;padding:8px;font-size:1em;">
-                    <option value="mm">מ"מ (mm)</option>
-                    <option value="cm">ס"מ (cm)</option>
-                    <option value="m">מטר (m)</option>
-                    <option value="km">ק"מ (km)</option>
-                    <option value="in">אינץ' (in)</option>
-                    <option value="ft">פיט (ft)</option>
-                    <option value="yd">יארד (yd)</option>
-                    <option value="mi">מייל (mi)</option>
-                    <option value="nmi">מייל ימי (nmi)</option>
-                </select>
-            </div>
-            <button class="calc-btn" style="width:100%;margin-bottom:15px;" onclick="convertLength()">המר</button>
-            <div id="lengthResult" style="text-align:center;font-size:1.3em;min-height:2em;"></div>
-        </div>
+  <!-- ── SIDEBAR ── -->
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <span>⬡ מחשבון</span>
+      <small>כלי חישוב</small>
     </div>
 
-    <script>
-        function showCalculator(type) {
-            document.getElementById('simpleCalc').style.display = (type === 'simple') ? 'block' : 'none';
-            document.getElementById('scientificCalc').style.display = (type === 'scientific') ? 'block' : 'none';
-            document.getElementById('currencyCalc').style.display = (type === 'currency') ? 'block' : 'none';
-            document.getElementById('weightCalc').style.display = (type === 'weight') ? 'block' : 'none';
-            document.getElementById('lengthCalc').style.display = (type === 'length') ? 'block' : 'none';
+    <button class="nav-item" id="nav-simple"      onclick="loadCalc('simple')">
+      <span class="icon">🔢</span><span>מחשבון פשוט</span>
+    </button>
+    <button class="nav-item" id="nav-scientific"  onclick="loadCalc('scientific')">
+      <span class="icon">🔬</span><span>מדעי</span>
+    </button>
+    <button class="nav-item" id="nav-currency"    onclick="loadCalc('currency')">
+      <span class="icon">💱</span><span>מטבעות</span>
+    </button>
+    <button class="nav-item" id="nav-weight"      onclick="loadCalc('weight')">
+      <span class="icon">⚖️</span><span>משקל</span>
+    </button>
+    <button class="nav-item" id="nav-length"      onclick="loadCalc('length')">
+      <span class="icon">📏</span><span>אורך</span>
+    </button>
+    <button class="nav-item" id="nav-words"       onclick="loadCalc('words')">
+      <span class="icon">🧮</span><span>מילים AI</span>
+    </button>
+  </nav>
 
-            document.getElementById('simpleBtn').classList.toggle('active', type === 'simple');
-            document.getElementById('scientificBtn').classList.toggle('active', type === 'scientific');
-            document.getElementById('currencyBtn').classList.toggle('active', type === 'currency');
-            document.getElementById('weightBtn').classList.toggle('active', type === 'weight');
-            document.getElementById('lengthBtn').classList.toggle('active', type === 'length');
-        }
+  <!-- ── MAIN ── -->
+  <main class="main">
+    <div class="card" id="calc-container">
+      <!-- Content injected dynamically from each calculator's module -->
+    </div>
+  </main>
 
-        // --- מחשבון פשוט ---
-        const simpleDisplay = document.getElementById('simpleDisplay');
-        function simpleAppend(val) {
-            simpleDisplay.value += val;
-        }
-        function simpleClear() {
-            simpleDisplay.value = '';
-        }
-        function simpleBackspace() {
-            simpleDisplay.value = simpleDisplay.value.slice(0, -1);
-        }
-        function simpleCalculate() {
-            try {
-                let result = eval(simpleDisplay.value);
-                if (typeof result === 'number' && !isNaN(result) && isFinite(result)) {
-                    simpleDisplay.value = result;
-                } else {
-                    simpleDisplay.value = 'שגיאה';
-                }
-            } catch {
-                simpleDisplay.value = 'שגיאה';
-            }
-        }
+  <!-- ============================================================
+       BASE LOADER — navigation + fragment loading
+  ============================================================ -->
+  <script>
+    const CALCULATORS = {
+      simple:      { file: 'calc-simple.html',     title: 'מחשבון פשוט'  },
+      scientific:  { file: 'calc-scientific.html', title: 'מחשבון מדעי'  },
+      currency:    { file: 'calc-currency.html',   title: 'המרת מטבעות'  },
+      weight:      { file: 'calc-weight.html',     title: 'המרת משקל'     },
+      length:      { file: 'calc-length.html',     title: 'המרת אורך'     },
+      words:       { file: 'calc-words.html',      title: 'מחשבון מילים'  },
+    };
 
-        // --- מחשבון מדעי ---
-        const scientificDisplay = document.getElementById('scientificDisplay');
-        function scientificAppend(val) {
-            scientificDisplay.value += val;
-        }
-        function scientificClear() {
-            scientificDisplay.value = '';
-        }
-        function scientificBackspace() {
-            scientificDisplay.value = scientificDisplay.value.slice(0, -1);
-        }
-        function scientificCalculate() {
-            try {
-                let expression = scientificDisplay.value.replace(/\^/g, '**');
-                let result = eval(expression);
-                if (typeof result === 'number' && !isNaN(result) && isFinite(result)) {
-                    scientificDisplay.value = result;
-                } else {
-                    scientificDisplay.value = 'שגיאה';
-                }
-            } catch {
-                scientificDisplay.value = 'שגיאה';
-            }
-        }
+    let currentCalc = null;
 
-        // --- מחשבון מטבעות ---
-        async function convertCurrency() {
-            const amount = parseFloat(document.getElementById('currencyAmount').value);
-            const from = document.getElementById('fromCurrency').value;
-            const to = document.getElementById('toCurrency').value;
-            const resultDiv = document.getElementById('currencyResult');
+    async function loadCalc(name) {
+      if (currentCalc === name) return;
+      currentCalc = name;
 
-            if (isNaN(amount) || amount < 0) {
-                resultDiv.textContent = 'אנא הזן סכום חוקי';
-                return;
-            }
+      // Update nav
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+      document.getElementById('nav-' + name)?.classList.add('active');
 
-            try {
-                const res = await fetch(`https://api.exchangerate.host/convert?from=${from}&to=${to}&amount=${amount}`);
-                const data = await res.json();
+      // Update title
+      document.getElementById('page-title').textContent = CALCULATORS[name].title;
 
-                if (!data || typeof data.result !== 'number') throw new Error("שגיאה בנתונים");
+      // Fetch fragment
+      const container = document.getElementById('calc-container');
+      try {
+        const res  = await fetch(CALCULATORS[name].file);
+        const html = await res.text();
+        container.innerHTML = html;
+        // Execute any inline scripts in the fragment
+        container.querySelectorAll('script').forEach(old => {
+          const s = document.createElement('script');
+          s.textContent = '(function(){' + old.textContent + '})();';
+          old.replaceWith(s);
+        });
+      } catch (e) {
+        container.innerHTML = `<p style="color:var(--accent-2);text-align:center;padding:40px 0;">שגיאה בטעינת המחשבון</p>`;
+      }
+    }
 
-                resultDiv.textContent = data.result.toFixed(2) + ' ' + getCurrencySymbol(to);
-            } catch (e) {
-                // fallback לשערים אופליין עם תאריך עדכון
-                const offlineRates = {
-                    ILS: { ILS: 1, USD: 0.27, EUR: 0.25, GBP: 0.21 },
-                    USD: { ILS: 3.7, USD: 1, EUR: 0.93, GBP: 0.78 },
-                    EUR: { ILS: 4.0, USD: 1.08, EUR: 1, GBP: 0.84 },
-                    GBP: { ILS: 4.7, USD: 1.28, EUR: 1.19, GBP: 1 }
-                };
-
-                if (from === to) {
-                    resultDiv.textContent = amount + ' ' + getCurrencySymbol(to) + ' (מעודכן ל־20/7/2025)';
-                    return;
-                }
-
-                const rate = offlineRates[from]?.[to];
-                if (!rate) {
-                    resultDiv.textContent = 'שגיאה בהמרה';
-                    return;
-                }
-
-                const result = (amount * rate).toFixed(2);
-                resultDiv.textContent = result + ' ' + getCurrencySymbol(to) + ' (מעודכן ל־20/7/2025)';
-            }
-        }
-
-        function getCurrencySymbol(code) {
-            switch (code) {
-                case 'ILS': return '₪';
-                case 'USD': return '$';
-                case 'EUR': return '€';
-                case 'GBP': return '£';
-                default: return code;
-            }
-        }
-
-        // --- מחשבון משקל ---
-        function convertWeight() {
-            const amount = parseFloat(document.getElementById('weightAmount').value);
-            const from = document.getElementById('fromWeightUnit').value;
-            const to = document.getElementById('toWeightUnit').value;
-            const resultDiv = document.getElementById('weightResult');
-
-            if (isNaN(amount) || amount < 0) {
-                resultDiv.textContent = 'אנא הזן כמות חוקית';
-                return;
-            }
-
-            const toGrams = {
-                g: 1,
-                kg: 1000,
-                lb: 453.59237,
-                oz: 28.3495231
-            };
-
-            if (!toGrams[from] || !toGrams[to]) {
-                resultDiv.textContent = 'יחידות לא מוכרות';
-                return;
-            }
-
-            const grams = amount * toGrams[from];
-            const converted = grams / toGrams[to];
-
-            resultDiv.textContent = converted.toFixed(4) + ' ' + getWeightUnitName(to);
-        }
-
-        function getWeightUnitName(code) {
-            switch (code) {
-                case 'g': return 'גרם';
-                case 'kg': return 'קילוגרם';
-                case 'lb': return 'פאונד';
-                case 'oz': return 'אונקיה';
-                default: return code;
-            }
-        }
-
-        // --- מחשבון אורך ---
-        function convertLength() {
-            const amount = parseFloat(document.getElementById('lengthAmount').value);
-            const from = document.getElementById('fromLengthUnit').value;
-            const to = document.getElementById('toLengthUnit').value;
-            const resultDiv = document.getElementById('lengthResult');
-
-            if (isNaN(amount) || amount < 0) {
-                resultDiv.textContent = 'אנא הזן כמות חוקית';
-                return;
-            }
-
-            const toMeters = {
-                mm: 0.001,
-                cm: 0.01,
-                m: 1,
-                km: 1000,
-                in: 0.0254,
-                ft: 0.3048,
-                yd: 0.9144,
-                mi: 1609.344,
-                nmi: 1852   // מייל ימי
-            };
-
-            if (!toMeters[from] || !toMeters[to]) {
-                resultDiv.textContent = 'יחידות לא מוכרות';
-                return;
-            }
-
-            const meters = amount * toMeters[from];
-            const converted = meters / toMeters[to];
-
-            resultDiv.textContent = converted.toFixed(4) + ' ' + getLengthUnitName(to);
-        }
-
-        function getLengthUnitName(code) {
-            switch (code) {
-                case 'mm': return 'מ"מ';
-                case 'cm': return 'ס"מ';
-                case 'm': return 'מטר';
-                case 'km': return 'ק"מ';
-                case 'in': return 'אינץ\'';
-                case 'ft': return 'פיט';
-                case 'yd': return 'יארד';
-                case 'mi': return 'מייל';
-                case 'nmi': return 'מייל ימי';
-                default: return code;
-            }
-        }
-    </script>
+    // Load default on start
+    loadCalc('simple');
+  </script>
 </body>
 </html>

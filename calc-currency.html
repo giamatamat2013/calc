@@ -1,0 +1,76 @@
+<!-- calc-currency.html — fragment -->
+<div class="converter-title">💱 המרת מטבעות</div>
+
+<input
+  type="number"
+  id="cur-amount"
+  class="converter-input"
+  placeholder="0"
+  min="0"
+  oninput="curConvert()"
+/>
+
+<div class="converter-row">
+  <select id="cur-from" class="converter-select" onchange="curConvert()">
+    <option value="ILS">🇮🇱 ש"ח — ILS</option>
+    <option value="USD">🇺🇸 דולר — USD</option>
+    <option value="EUR">🇪🇺 אירו — EUR</option>
+    <option value="GBP">🇬🇧 פאונד — GBP</option>
+    <option value="JPY">🇯🇵 ין — JPY</option>
+  </select>
+
+  <span class="arrow-icon">⇄</span>
+
+  <select id="cur-to" class="converter-select" onchange="curConvert()">
+    <option value="USD">🇺🇸 דולר — USD</option>
+    <option value="ILS">🇮🇱 ש"ח — ILS</option>
+    <option value="EUR">🇪🇺 אירו — EUR</option>
+    <option value="GBP">🇬🇧 פאונד — GBP</option>
+    <option value="JPY">🇯🇵 ין — JPY</option>
+  </select>
+</div>
+
+<div class="result-box" id="cur-result">
+  <span class="result-empty">הזן סכום להמרה</span>
+</div>
+
+<div class="note">* שערים אופליין מעודכנים ל-20/7/2025. לשערים חיים חבר לאינטרנט.</div>
+
+<script>
+  const OFFLINE_RATES = {
+    ILS: { ILS:1,     USD:0.27,   EUR:0.25,   GBP:0.21,   JPY:40.5  },
+    USD: { ILS:3.70,  USD:1,      EUR:0.93,   GBP:0.78,   JPY:149.5 },
+    EUR: { ILS:4.00,  USD:1.08,   EUR:1,      GBP:0.84,   JPY:160.8 },
+    GBP: { ILS:4.70,  USD:1.28,   EUR:1.19,   GBP:1,      JPY:191.2 },
+    JPY: { ILS:0.025, USD:0.0067, EUR:0.0062, GBP:0.0052, JPY:1     },
+  };
+
+  const SYMBOLS = { ILS:'₪', USD:'$', EUR:'€', GBP:'£', JPY:'¥' };
+
+  async function curConvert() {
+    const amount = parseFloat(document.getElementById('cur-amount').value);
+    const from   = document.getElementById('cur-from').value;
+    const to     = document.getElementById('cur-to').value;
+    const box    = document.getElementById('cur-result');
+
+    if (isNaN(amount) || amount < 0) {
+      box.innerHTML = '<span class="result-empty">הזן סכום חוקי</span>';
+      return;
+    }
+
+    let result, isLive = false;
+
+    try {
+      const res  = await fetch(`https://api.exchangerate.host/convert?from=${from}&to=${to}&amount=${amount}`);
+      const data = await res.json();
+      if (typeof data?.result !== 'number') throw 0;
+      result = data.result;
+      isLive = true;
+    } catch {
+      result = amount * (OFFLINE_RATES[from]?.[to] ?? 1);
+    }
+
+    const fmt = to === 'JPY' ? result.toFixed(0) : result.toFixed(2);
+    box.innerHTML = `<span class="result-value">${SYMBOLS[to] ?? ''}${fmt} <span style="font-size:.85rem;opacity:.6">${to}</span></span>`;
+  }
+</script>

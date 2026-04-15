@@ -1,0 +1,103 @@
+<!-- calc-scientific.html — fragment -->
+<div class="display-wrap">
+  <div class="display-expr" id="sc-expr"></div>
+  <div class="display-main" id="sc-display" style="font-size:1.6rem;">0</div>
+</div>
+
+<div class="buttons" style="grid-template-columns: repeat(4, 1fr);">
+  <!-- Row 1: functions -->
+  <button class="calc-btn op" style="font-size:.82rem;" onclick="scAppend('Math.sin(')">sin</button>
+  <button class="calc-btn op" style="font-size:.82rem;" onclick="scAppend('Math.cos(')">cos</button>
+  <button class="calc-btn op" style="font-size:.82rem;" onclick="scAppend('Math.tan(')">tan</button>
+  <button class="calc-btn op" style="font-size:.82rem;" onclick="scAppend('Math.log10(')">log</button>
+
+  <button class="calc-btn op" style="font-size:.82rem;" onclick="scAppend('Math.log(')">ln</button>
+  <button class="calc-btn op" style="font-size:.82rem;" onclick="scAppend('Math.sqrt(')">√</button>
+  <button class="calc-btn op" style="font-size:.82rem;" onclick="scAppend('**')">xʸ</button>
+  <button class="calc-btn op" style="font-size:.82rem;" onclick="scAppend(Math.PI)">π</button>
+
+  <!-- Row 3: AC / back / % / ÷ -->
+  <button class="calc-btn clear"  onclick="scClear()">AC</button>
+  <button class="calc-btn clear"  onclick="scBack()">⌫</button>
+  <button class="calc-btn op"     onclick="scAppend('(')">(</button>
+  <button class="calc-btn op"     onclick="scAppend(')')">)</button>
+
+  <!-- Digits + ops -->
+  <button class="calc-btn"  onclick="scAppend('7')">7</button>
+  <button class="calc-btn"  onclick="scAppend('8')">8</button>
+  <button class="calc-btn"  onclick="scAppend('9')">9</button>
+  <button class="calc-btn op" onclick="scAppend('/')">÷</button>
+
+  <button class="calc-btn"  onclick="scAppend('4')">4</button>
+  <button class="calc-btn"  onclick="scAppend('5')">5</button>
+  <button class="calc-btn"  onclick="scAppend('6')">6</button>
+  <button class="calc-btn op" onclick="scAppend('*')">×</button>
+
+  <button class="calc-btn"  onclick="scAppend('1')">1</button>
+  <button class="calc-btn"  onclick="scAppend('2')">2</button>
+  <button class="calc-btn"  onclick="scAppend('3')">3</button>
+  <button class="calc-btn op" onclick="scAppend('-')">−</button>
+
+  <button class="calc-btn"  onclick="scAppend('0')">0</button>
+  <button class="calc-btn"  onclick="scAppend('.')">.</button>
+  <button class="calc-btn eq" onclick="scCalc()">=</button>
+  <button class="calc-btn op" onclick="scAppend('+')">+</button>
+</div>
+
+<div class="hint">s=sin · c=cos · t=tan · l=log · r=√ · p=π</div>
+
+<script>
+  let scVal = '';
+
+  const scDisp   = () => document.getElementById('sc-display');
+  const scExprEl = () => document.getElementById('sc-expr');
+
+  function scAppend(v) {
+    if (scDisp().textContent === 'שגיאה') scVal = '';
+    scVal += v;
+    scDisp().textContent = scVal || '0';
+    scExprEl().textContent = '';
+  }
+
+  function scClear() {
+    scVal = '';
+    scDisp().textContent = '0';
+    scExprEl().textContent = '';
+  }
+
+  function scBack() {
+    if (scDisp().textContent === 'שגיאה') { scClear(); return; }
+    scVal = scVal.slice(0, -1);
+    scDisp().textContent = scVal || '0';
+  }
+
+  function scCalc() {
+    try {
+      let expr = scVal;
+      let r = eval(expr);
+      if (typeof r !== 'number' || !isFinite(r)) throw 0;
+      scExprEl().textContent = scVal + ' =';
+      scVal = parseFloat(r.toFixed(10)).toString();
+      scDisp().textContent = scVal;
+    } catch {
+      scDisp().textContent = 'שגיאה';
+      scVal = '';
+    }
+  }
+
+  document.addEventListener('keydown', function sck(e) {
+    if (!document.getElementById('sc-display')) {
+      document.removeEventListener('keydown', sck); return;
+    }
+    if ('0123456789.+-*/()^'.includes(e.key)) { scAppend(e.key); e.preventDefault(); }
+    else if (e.key === 'Backspace') { scBack(); e.preventDefault(); }
+    else if (e.key === 'Escape')    { scClear(); e.preventDefault(); }
+    else if (e.key === 'Enter')     { scCalc(); e.preventDefault(); }
+    else if (e.key === 's') { scAppend('Math.sin('); e.preventDefault(); }
+    else if (e.key === 'c') { scAppend('Math.cos('); e.preventDefault(); }
+    else if (e.key === 't') { scAppend('Math.tan('); e.preventDefault(); }
+    else if (e.key === 'l') { scAppend('Math.log10('); e.preventDefault(); }
+    else if (e.key === 'r') { scAppend('Math.sqrt('); e.preventDefault(); }
+    else if (e.key === 'p') { scAppend(Math.PI); e.preventDefault(); }
+  });
+</script>
